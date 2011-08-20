@@ -7,8 +7,9 @@ import Data.Maybe (fromJust)
 import Data.DateTime
 import System.Locale (defaultTimeLocale)
 import Data.Time.Format (parseTime)
-import Data.Time.LocalTime (TimeZone, localTimeToUTC, getCurrentTimeZone)
-
+import Data.Time.LocalTime (TimeZone, localTimeToUTC, getCurrentTimeZone,
+                            utcToLocalTime)
+import Text.Printf (printf)
 import Extractor
 
 data Args = Args { database :: String
@@ -51,4 +52,21 @@ main = do
   tz <- getCurrentTimeZone
   args <- cmdArgs (synopsis tz)
   stats <- queryStats $ convertArgs args
-  print stats
+  mapM_ (pretty (read $ timezone args)) $ fromJust stats
+
+pretty tz (name,s) = printf format
+                     name
+                     (minTemp s) (showTime tz $ minTime s)
+                     (maxTemp s) (showTime tz $ maxTime s)
+                     (avg s)
+                     (n s)
+
+format = unlines [ "Location: %s"
+                 , "  minimum:%+6.1f °C at %s"
+                 , "  maximum:%+6.1f °C at %s"
+                 , "  average:%+6.1f °C"
+                 , "  number of samples: %d"
+                 ]
+
+showTime :: TimeZone -> DateTime -> String
+showTime tz ts = show $ utcToLocalTime tz ts
