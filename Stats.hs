@@ -6,10 +6,8 @@ import Network.URI
 import Data.Maybe (fromJust)
 import Data.DateTime
 import System.Locale (defaultTimeLocale)
-import Control.Monad (liftM)
 import Data.Time.Format (parseTime)
-import Data.Time.LocalTime (TimeZone, LocalTime,
-                            localTimeToUTC, getCurrentTimeZone)
+import Data.Time.LocalTime (TimeZone, localTimeToUTC, getCurrentTimeZone)
 
 import Extractor
 
@@ -35,20 +33,19 @@ synopsis tz =
 
 convertArgs :: Args -> Query
 convertArgs a = Query { qDatabase = fromJust $ parseURI (database a)
-                      , qStart = start a >>= Just . (dateToTimestamp tz)
-                      , qEnd = end a >>= Just . (dateToTimestamp tz)
+                      , qStart = start a >>= Just . (parseWisely tz)
+                      , qEnd = end a >>= Just . (parseWisely tz)
                       }
   where tz = read $ timezone a
 
 -- |Parses date and gives error in case of parse error. Absorbing
 -- Maybe because you never want to continue in case of parse error.
-dateToTimestamp :: TimeZone -> String -> Integer
-dateToTimestamp tz str =
+parseWisely :: TimeZone -> String -> DateTime
+parseWisely tz str =
   case parsed of
-    Just a -> localToUnix a
+    Just a -> localTimeToUTC tz a
     Nothing -> error "Cannot parse date. ISO 8601 format required."
   where parsed = parseTime defaultTimeLocale "%F" str
-        localToUnix x = toSeconds $ localTimeToUTC tz x
 
 main = do 
   tz <- getCurrentTimeZone
