@@ -4,6 +4,15 @@ While I'm not aware how storing and updating of views should be done
 properly, I just wrote them to Futon and copy-pasted them here. Please
 help me, I'm a newbie.
 
+TODO write a script to do this automatically?
+
+## Installing
+
+Open Futon and create a view in your database. Use design document
+`analysis` and view name `temp`. Copy-paste contents from
+`temp.map.js` and `temp.reduce.js` to map and reduce functions
+respectively.
+
 ## Supported features
 
 The collector has 4 temperature sources: one for device, one for room
@@ -23,5 +32,9 @@ Features per measurement source:
 
 * Minimum and maximum temperature
 * Timestamps of minimum and maximum points
-* Arithmetic mean (=average) temperature
+* Sum of measurements
 * Number of measurements collected
+
+Note there's no arithmetic mean (=average) of the temperature. To get
+that we calculate that in user application by dividing sum of
+measurements by number of measurements.
