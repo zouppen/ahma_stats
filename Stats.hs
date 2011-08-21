@@ -1,15 +1,12 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Main where
 
-import System.Console.CmdArgs.Implicit
-import Network.URI
 import Data.Maybe (fromJust)
-import Data.DateTime
-import System.Locale (defaultTimeLocale)
-import Data.Time.Format (parseTime)
-import Data.Time.LocalTime (TimeZone, localTimeToUTC, getCurrentTimeZone,
-                            utcToLocalTime, timeZoneOffsetString)
+import Data.Time.LocalTime (getCurrentTimeZone, timeZoneOffsetString)
+import Network.URI
+import System.Console.CmdArgs.Implicit
 import Text.Printf (printf)
+import TimeQuirks
 import Extractor
 
 data Args = Args { database :: String
@@ -17,8 +14,6 @@ data Args = Args { database :: String
                  , end :: Maybe String
                  , timezone :: String
                  } deriving (Show, Data, Typeable)
-
-defDB = "http://localhost:5984"
 
 synopsis tz =
   Args{ database = defDB &= typ "URL" &= help
@@ -39,22 +34,7 @@ convertArgs a = Query { qDatabase = fromJust $ parseURI (database a)
                       , qStart = start a >>= Just . (parseWisely tz)
                       , qEnd = end a >>= Just . (parseWisely tz)
                       }
-  where tz = case zoneParse (timezone a) of
-          Just x -> x
-          Nothing -> error "Invalid timezone format. Use numeric definition!"
-
--- |Parses date and gives error in case of parse error. Absorbing
--- Maybe because you never want to continue in case of parse error.
-parseWisely :: TimeZone -> String -> DateTime
-parseWisely tz str =
-  case parsed of
-    Just a -> localTimeToUTC tz a
-    Nothing -> error "Cannot parse date. ISO 8601 format required."
-  where parsed = parseTime defaultTimeLocale "%F" str
-
--- |Parses numeric timezones.
-zoneParse :: String -> Maybe TimeZone
-zoneParse str = parseTime defaultTimeLocale "%z" str
+  where tz = zoneParse' (timezone a)
 
 -- |Main function and printing.
 main = do 
@@ -77,7 +57,3 @@ format = unlines [ "Location: %s"
                  , "  average:%+6.1f °C"
                  , "  number of samples: %d"
                  ]
-
--- |Formats time for given timezone.
-showTime :: TimeZone -> DateTime -> String
-showTime tz ts = show $ utcToLocalTime tz ts

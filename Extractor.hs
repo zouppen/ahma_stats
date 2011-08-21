@@ -1,10 +1,12 @@
 module Extractor where
 
+import Control.Monad (unless)
+import Data.DateTime
+import Database.CouchDB
 import Network.URI
 import Text.JSON
-import Database.CouchDB
-import Data.DateTime
-import Control.Monad (unless)
+
+defDB = "http://localhost:5984"
 
 -- |Incoming data which defines the query.
 data Query = Query { qDatabase :: URI
