@@ -1,4 +1,3 @@
-{-*- coding: utf-8 -*-}
 {-# LANGUAGE DeriveDataTypeable #-}
 module Main where
 
