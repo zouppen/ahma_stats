@@ -3,11 +3,12 @@ module Main where
 
 import Data.Maybe (fromJust)
 import Data.Time.LocalTime (getCurrentTimeZone, timeZoneOffsetString)
-import Network.URI
 import System.Console.CmdArgs.Implicit
 import Text.Printf (printf)
-import TimeQuirks
+
+import DbHelpers
 import Extractor
+import TimeQuirks
 
 data Args = Args { database :: String
                  , start :: Maybe String
@@ -29,20 +30,21 @@ synopsis tz =
 
 -- |Converts user-supplied parameters to a format suitable query. URL
 -- must be parsed, dates must be in UTC format etc.
-convertArgs :: Args -> Query
-convertArgs a = Query { qDatabase = fromJust $ parseURI (database a)
-                      , qStart = start a >>= Just . (parseWisely tz)
-                      , qEnd = end a >>= Just . (parseWisely tz)
-                      }
-  where tz = zoneParse' (timezone a)
+convertArgs :: Args -> QueryStats
+convertArgs a = QueryStats { qsDatabase = toURI $ database a
+                           , qsStart = start a >>= Just . tzParse
+                           , qsEnd = end a >>= Just . tzParse
+                           }
+  where tzParse = parseWisely $ zoneParse' (timezone a)
 
 -- |Main function and printing.
 main = do 
-  tz <- getCurrentTimeZone
-  args <- cmdArgs $ synopsis $ timeZoneOffsetString tz
+  tzHere <- getCurrentTimeZone
+  args <- cmdArgs $ synopsis $ timeZoneOffsetString tzHere
   stats <- queryStats $ convertArgs args
-  putStrLn $ "Time zone is " ++ (timezone args)
-  mapM_ (pretty (read $ timezone args)) $ fromJust stats
+  let tz = zoneParse' $ timezone args
+  putStrLn $ "Time zone is " ++ show tz
+  mapM_ (pretty tz) $ fromJust stats
 
 pretty tz (name,s) = printf format
                      name

@@ -6,13 +6,16 @@ import Database.CouchDB
 import Network.URI
 import Text.JSON
 
-defDB = "http://localhost:5984"
-
 -- |Incoming data which defines the query.
-data Query = Query { qDatabase :: URI
-                   , qStart :: Maybe DateTime
-                   , qEnd :: Maybe DateTime
-                   } deriving (Show)
+data QueryStats = QueryStats { qsDatabase :: URI
+                             , qsStart    :: Maybe DateTime
+                             , qsEnd      :: Maybe DateTime
+                             } deriving (Show)
+
+-- |Incoming data which defines single document query.
+data QueryOne = QueryOne { qoDatabase :: URI
+                         , qoWhen     :: Maybe DateTime
+                         } deriving (Show)
 
 -- |Outgoing data contains one result.
 data TempStat = TempStat { minTemp :: Double
@@ -23,19 +26,17 @@ data TempStat = TempStat { minTemp :: Double
                          , n       :: Integer
                          } deriving (Show)
 
---queryStats :: Query -> IO (Maybe [TempStat])
-queryStats q = runCouchDBURI (qDatabase q) (dbQuery q)
+queryStats q = runCouchDBURI (qsDatabase q) (dbQueryStats q)
 
-dbQuery :: Query -> CouchMonad (Maybe [(String, TempStat)])
-dbQuery q = do
-  docs <- queryView (db "measurements") (doc "analysis") (doc "temp") range
+dbQueryStats :: QueryStats -> CouchMonad (Maybe [(String, TempStat)])
+dbQueryStats q = do
+  docs <- queryTempView range
   case length docs of
     0 -> return Nothing -- Date range too narrow, no data.
     1 -> return $ Just $ map conv $ fromJSObject $ snd $ head docs
     _ -> fail "Too many results"
-
   where
-    range = append "startkey" (qStart q) $ append "endkey" (qEnd q) []
+    range = append "startkey" (qsStart q) $ append "endkey" (qsEnd q) []
     conv (a,b) = (a,extract b)
 
 append :: String -> Maybe DateTime -> [(String,JSValue)] -> [(String,JSValue)]
@@ -60,3 +61,22 @@ extract js = TempStat { minTemp = readQuick "min"
     readQuick x = case valFromObj x js of
       Ok a -> a
       Error msg -> error $ "Database format error: " ++ msg
+
+queryOne q = runCouchDBURI (qoDatabase q) (dbQueryOne q)
+
+dbQueryOne :: QueryOne -> CouchMonad (Maybe (JSObject JSValue))
+dbQueryOne q = do
+  docs <- queryTempView range
+  case docs of
+    [(doc,_)] -> do
+      Just (_,_,a) <- getDoc (db "measurements") doc
+      return $ Just a
+    [] -> return Nothing -- Date too old or no data.
+    _ -> fail "Database is bad."
+  where
+    range = append "startkey" (qoWhen q) static
+    static = [("descending",JSBool True)
+             ,("reduce",JSBool False)
+             ,("limit",showJSON (1::Integer))]
+
+queryTempView = queryView (db "measurements") (doc "analysis") (doc "temp")
