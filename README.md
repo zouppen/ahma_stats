@@ -81,4 +81,4 @@ I get:
 
 The number of samples tend to vary because some of the measurements
 went wrong. That's quite normal with long cabling and may be fixed in
-`ahmattimittari` if needed.
+*ahmattimittari* if needed.
