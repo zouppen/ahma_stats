@@ -1,17 +1,7 @@
-# CouchDB views
+# CouchDB view for temperature readings
 
-While I'm not aware how storing and updating of views should be done
-properly, I just wrote them to Futon and copy-pasted them here. Please
-help me, I'm a newbie.
-
-TODO write a script to do this automatically?
-
-## Installing
-
-Open Futon and create a view in your database. Use design document
-`analysis` and view name `temp`. Copy-paste contents from
-`temp.map.js` and `temp.reduce.js` to map and reduce functions
-respectively.
+Install this with couchapp. See README.md in root directory for more
+information.
 
 ## Supported features
 
