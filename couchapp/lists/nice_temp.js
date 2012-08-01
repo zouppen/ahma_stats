@@ -5,6 +5,12 @@ function format(o,name) {
     send(name);
     send('</h2><ul>');
 
+    send('<li>Viimeisin mittaus ');
+    send(o.end_value.toFixed(1));
+    send('°C (');
+    send(fin_date(o.end_time));
+    send(')</li>');
+
     send('<li>Keskilämpötila ');
     send((o.sum / o.n).toFixed(1));
     send('°C (');
@@ -40,19 +46,33 @@ function fin_date(a) {
 	' klo '+pad(d.getHours())+'.'+pad(d.getMinutes());
 }
 
+function callAll(row,key,f) {
+    var a = row.value;
+    return f(a.in[key],
+	     a.out[key],
+	     a.box[key]
+	    );
+}
+
 function(head, req) {
     "use strict";
-    var row;
     start({
 	"headers": {
 	    "Content-Type": "text/html; charset=UTF-8"
 	}
     });
+
+    var row = getRow(); // Process only one, assume no grouping
+
     send('<h1>Lämpötilat Ahmalla</h1>');
 
-    while(row = getRow()) {
-	format(row.value.out,"Ulkona");
-	format(row.value.in,"Sisällä");
-	format(row.value.box,"Laitetila");
-    }
+    send('<p>Aikavälillä ');
+    send(fin_date(callAll(row,"start_time",Math.min)));
+    send(' – ');
+    send(fin_date(callAll(row,"end_time",Math.max)));
+    send('</p>');
+
+    format(row.value.out,"Ulkona");
+    format(row.value.in,"Sisällä");
+    format(row.value.box,"Laitetila");
 }
