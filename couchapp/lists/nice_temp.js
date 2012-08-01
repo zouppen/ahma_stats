@@ -1,4 +1,6 @@
 function format(o,name) {
+    "use strict";
+
     send('<h2>');
     send(name);
     send('</h2><ul>');
@@ -24,6 +26,7 @@ function format(o,name) {
 }
 
 function fin_date(a) {
+    "use strict";
     var d = new Date(a*1000);
 
     function pad(number) {  
@@ -38,6 +41,7 @@ function fin_date(a) {
 }
 
 function(head, req) {
+    "use strict";
     var row;
     start({
 	"headers": {
