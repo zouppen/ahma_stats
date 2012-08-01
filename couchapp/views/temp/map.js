@@ -3,7 +3,7 @@
 
 function build(ts,value) {
     "use strict";
-    if (value === undefined) return null;
+    if (isNaN(value)) return null;
     return { min: value,       // Global minimum
 	     max: value,       // Global maximum
 	     n: 1,             // Number of samples
