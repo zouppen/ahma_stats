@@ -1,3 +1,6 @@
+now = new Date();
+now_unix = Math.floor(now.getTime() / 1000);
+
 function format(o,name) {
     "use strict";
 
@@ -54,6 +57,42 @@ function callAll(row,key,f) {
 	    );
 }
 
+function link_range(title,start,end) {
+    var r;
+    if (start === null && end == null) r = '';
+    else if (start === null) r = 'endkey='+end;
+    else if (end === null) r = 'startkey='+start;
+    else r = 'startkey='+start+'&endkey='+end;
+
+    send('<li><a href="?');
+    send(r);
+    send('">');
+    send(title);
+    send('</li>');
+}
+
+function day_ago() {
+    return now_unix - 86400;
+}
+
+function year_ago() {
+    var old = new Date(now.getTime());
+    // Leap year aware on the contrary to unix timestamp trick
+    old.setFullYear(old.getFullYear()-1);
+    return Math.floor(old.getTime() / 1000);
+}
+
+function month_ago() {
+    var old = new Date(now.getTime());
+    old.setMonth(old.getMonth()-1);
+    return Math.floor(old.getTime() / 1000);
+}
+
+function year_start() {
+    var old = new Date(now.getFullYear(),0,1);
+    return Math.floor(old.getTime() / 1000);
+}
+
 function(head, req) {
     "use strict";
     start({
@@ -66,13 +105,31 @@ function(head, req) {
 
     send('<h1>Lämpötilat Ahmalla</h1>');
 
-    send('<p>Aikavälillä ');
-    send(fin_date(callAll(row,"start_time",Math.min)));
-    send(' – ');
-    send(fin_date(callAll(row,"end_time",Math.max)));
-    send('</p>');
+    if (row == undefined) {
+	send('<p>Ei dataa tällä aikavälillä</p>');
+    } else {
+	send('<p>Aikavälillä ');
+	send(fin_date(callAll(row,"start_time",Math.min)));
+	send(' – ');
+	send(fin_date(callAll(row,"end_time",Math.max)));
+	send('</p>');
+	
+	format(row.value.out,"Ulkona");
+	format(row.value.in,"Sisällä");
+	format(row.value.box,"Laitetila");
+    }	
 
-    format(row.value.out,"Ulkona");
-    format(row.value.in,"Sisällä");
-    format(row.value.box,"Laitetila");
+    send('<h2>Vaihda aikaväliä</h2><ul>');
+    link_range('Kaikki mittaukset',null,null);
+    link_range('Viimeisin vuorokausi',day_ago(),now_unix);
+    link_range('Viimeisin kuukausi',month_ago(),now_unix);
+    link_range('Vuoden alusta',year_start(),null);
+    link_range('Viimeisin vuosi',year_ago(),now_unix);
+    link_range('Tästä hetkestä lähtien',now_unix,null);
+
+    send('</ul>');
+
+    send('<p><a title="Tutki sovelluksen lähdekoodia" '+
+	 'href="https://github.com/zouppen/ahma_stats">'+
+	 'Lähdekoodi</a> löytyy GitHubista.</p>');
 }
