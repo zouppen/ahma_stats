@@ -34,8 +34,10 @@ function format(o,name) {
     send('</ul>');
 }
 
-function fin_date(a) {
+function fin_date(a,alt) {
     "use strict";
+    if (isNaN(a)) return alt;
+
     var d = new Date(a*1000);
 
     function pad(number) {  
@@ -105,10 +107,16 @@ function(head, req) {
 
     send('<h1>Lämpötilat Ahmalla</h1>');
 
+    send('<p>Pyydetty aikaväli: ');
+    send(fin_date(req.query.startkey,"alusta"));
+    send(' – ');
+    send(fin_date(req.query.endkey,"loppuun"));
+    send('</p>');
+
     if (row == undefined) {
 	send('<p>Ei dataa tällä aikavälillä</p>');
     } else {
-	send('<p>Aikavälillä ');
+send('<p>Mittausten aikaväli: ');
 	send(fin_date(callAll(row,"start_time",Math.min)));
 	send(' – ');
 	send(fin_date(callAll(row,"end_time",Math.max)));
@@ -116,7 +124,7 @@ function(head, req) {
 	
 	format(row.value.out,"Ulkona");
 	format(row.value.in,"Sisällä");
-	format(row.value.box,"Laitetila");
+	format(row.value.box,"Laitetilassa");
     }	
 
     send('<h2>Vaihda aikaväliä</h2><ul>');
