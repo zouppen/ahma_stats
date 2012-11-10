@@ -1,5 +1,5 @@
-now = new Date();
-now_unix = Math.floor(now.getTime() / 1000);
+var now;
+var now_unix;
 
 function format(o,name) {
     "use strict";
@@ -103,6 +103,10 @@ function(head, req) {
 	}
     });
 
+    // Update times
+    now = new Date();
+    now_unix = Math.floor(now.getTime() / 1000);
+
     var row = getRow(); // Process only one, assume no grouping
 
     send('<h1>Lämpötilat Ahmalla</h1>');
@@ -116,7 +120,7 @@ function(head, req) {
     if (row == undefined) {
 	send('<p>Ei dataa tällä aikavälillä</p>');
     } else {
-send('<p>Mittausten aikaväli: ');
+	send('<p>Mittausten aikaväli: ');
 	send(fin_date(callAll(row,"start_time",Math.min)));
 	send(' – ');
 	send(fin_date(callAll(row,"end_time",Math.max)));
